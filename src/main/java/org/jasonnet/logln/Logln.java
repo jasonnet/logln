@@ -4,7 +4,8 @@ import java.lang.reflect.Field;
 
 /**
  * A set of helper functions for logging progress of a 
- * program.
+ * program.  These functions make a point of logging the line 
+ * number of the calling code. 
  * 
  * @author jasonnet (1/26/2015)
  */
@@ -25,7 +26,7 @@ public class Logln {
 	 *  
 	 * One can facilitate calling this routine by including a 
 	 * <pre> 
-	 * import org.jasonnet.logln.Logln.logln;
+	 * import static org.jasonnet.logln.Logln.logln; 
 	 * </pre>
 	 * at the top of the source java file.
 	 * 
@@ -46,7 +47,7 @@ public class Logln {
 	 *  
 	 * One can facilitate calling this routine by including a 
 	 * <pre> 
-	 * import org.jasonnet.logln.Logln.logln;
+	 * import static org.jasonnet.logln.Logln.logln; 
 	 * </pre>
 	 * at the top of the source java file.
 	 * 
