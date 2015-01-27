@@ -32,7 +32,7 @@ public class Logln {
 	 * 
 	 * @author jasonnet (01/26/2015)
 	 * 
-	 * @param msg
+	 * @param msg the diagnostic message to display
 	 */
 	public static void logln( String msg) {
 		StackTraceElement els[] = Thread.currentThread().getStackTrace();
@@ -53,12 +53,12 @@ public class Logln {
 	 * 
 	 * @author jasonnet (01/26/2015)
 	 * 
-	 * @param msg
+	 * @param msg the diagnostic message to display
+	 * @param SHORTFN the filename to display when logging
 	 */
 	public static void logln( String msg, String SHORTFN) {
 		StackTraceElement els[] = Thread.currentThread().getStackTrace();
 		_logln(msg, els, SHORTFN );
-
 	}
 
 	private static void _logln( String msg, StackTraceElement els[], String fn) {
