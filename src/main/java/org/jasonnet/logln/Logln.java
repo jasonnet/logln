@@ -1,6 +1,8 @@
 package org.jasonnet.logln;
 
+import java.util.Date;
 import java.lang.reflect.Field;
+import java.text.SimpleDateFormat;
 
 /**
  * A set of helper functions for logging progress of a 
@@ -87,6 +89,7 @@ public class Logln {
 				}
 			}
 		}
+		if (dateformat!=null) System.out.print(dateformat.format(new Date()));
 		System.out.printf("%10s:%4d: ", fn, els[2].getLineNumber() );
 		for (int i=0; i<els.length; i++) sb.append(' ');
 		sb.append(els[2].getMethodName());
@@ -96,4 +99,24 @@ public class Logln {
 		System.out.println();
 	}
 
+	protected static final String initial_datetemplate = "yyyy-MM-dd hh:mm:ss ";
+	protected static SimpleDateFormat dateformat = new SimpleDateFormat(initial_datetemplate);
+
+	/**
+	 * Set the template for how to display the date in subsequent 
+	 * log lines.  
+	 * 
+	 * @author ccjason (2/11/2015)
+	 * 
+	 * @param template This should be expressed in the same way that 
+	 *      	   it is for the constructor of the {@link
+	 *      	   SimpleDateFormat} class.
+	 */
+	public static void setDateTemplate(String template) {
+		if (template==null) {
+			dateformat = null;
+		} else {
+			dateformat = new SimpleDateFormat(template);
+		}
+	}
 }
