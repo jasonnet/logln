@@ -99,7 +99,7 @@ public class Logln {
 		System.out.println();
 	}
 
-	protected static final String initial_datetemplate = "yyyy-MM-dd hh:mm:ss ";
+	protected static final String initial_datetemplate = "yyyy-MM-dd kk:mm:ss ";
 	protected static SimpleDateFormat dateformat = new SimpleDateFormat(initial_datetemplate);
 
 	/**
