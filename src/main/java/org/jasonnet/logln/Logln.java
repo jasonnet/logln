@@ -1,5 +1,6 @@
 package org.jasonnet.logln;
 
+import java.io.PrintStream;
 import java.util.Date;
 import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
@@ -13,6 +14,20 @@ import java.text.SimpleDateFormat;
  */
 public class Logln {
 	
+	final static PrintStream ps;
+	static {
+		String fn = System.getenv().get("LOGLN_FILE");
+		if (fn!=null) {
+			try {
+				ps = new PrintStream( new java.io.FileOutputStream(fn));
+			} catch (java.io.IOException exc) {
+				throw new RuntimeException(exc);
+			}
+		} else {
+			ps = System.out;
+		}
+	}
+		
 	/**
 	 * hiding default constructor by declaring it private.
 	 * 
@@ -89,14 +104,14 @@ public class Logln {
 				}
 			}
 		}
-		if (dateformat!=null) System.out.print(dateformat.format(new Date()));
-		System.out.printf("%10s:%4d: ", fn, els[2].getLineNumber() );
+		if (dateformat!=null) ps.print(dateformat.format(new Date()));
+		ps.printf("%10s:%4d: ", fn, els[2].getLineNumber() );
 		for (int i=0; i<els.length; i++) sb.append(' ');
 		sb.append(els[2].getMethodName());
 		sb.append(": ");
 		sb.append(msg);
-		System.out.print(sb);
-		System.out.println();
+		ps.print(sb);
+		ps.println();
 	}
 
 	protected static final String initial_datetemplate = "yyyy-MM-dd kk:mm:ss ";
