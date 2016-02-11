@@ -112,6 +112,7 @@ public class Logln {
 		sb.append(msg);
 		ps.print(sb);
 		ps.println();
+		ps.flush();
 	}
 
 	protected static final String initial_datetemplate = "yyyy-MM-dd kk:mm:ss ";
