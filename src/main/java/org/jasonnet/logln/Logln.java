@@ -18,7 +18,15 @@ import java.text.SimpleDateFormat;
  */
 public class Logln {
 	
-	final static PrintStream ps;
+	/**
+	 * This is the PrintStream that will receive logging.  It's made
+	 * public here so that other code can also contribute to that 
+	 * stream.  This can be suitable for calls to 
+	 * throwable.printStackTrace(). 
+	 * 
+	 * @author nnd15 (2/11/2016)
+	 */
+	public final static PrintStream ps;
 	static {
 		String fn = System.getenv().get("LOGLN_FILE");
 		if (fn!=null) {
