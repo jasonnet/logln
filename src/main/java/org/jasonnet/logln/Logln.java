@@ -9,6 +9,10 @@ import java.text.SimpleDateFormat;
  * A set of helper functions for logging progress of a 
  * program.  These functions make a point of logging the line 
  * number of the calling code. 
+ *  
+ * The LOGLN environment variable should be set to the file to 
+ * receive the logging information.  If it's unset, the logging 
+ * info will be routed to System.out which usually is stdout. 
  * 
  * @author jasonnet (1/26/2015)
  */
@@ -105,7 +109,7 @@ public class Logln {
 			}
 		}
 		if (dateformat!=null) ps.print(dateformat.format(new Date()));
-		ps.printf("%10s:%4d: ", fn, els[2].getLineNumber() );
+		ps.printf("%20.20s:%4d: ", fn, els[2].getLineNumber() );
 		for (int i=0; i<els.length; i++) sb.append(' ');
 		sb.append(els[2].getMethodName());
 		sb.append(": ");
