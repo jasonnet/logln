@@ -17,19 +17,60 @@ import java.text.SimpleDateFormat;
  * @author jasonnet (1/26/2015)
  */
 public class Logln {
+
+	/**
+	 * hiding default constructor by declaring it private.
+	 * 
+	 * @author jasonnet (1/269/2015)
+	 */
+	private Logln() {
+	}
+
+	/**
+	 * Determines if the logging code should determine the calling
+	 * stack and log it if it's different than the the calling stack 
+	 * of the previous log message.  By setting the LOGLN_LOGSTACK 
+	 * environtment variable to 1, one can turn this on, otherwise 
+	 * it is off.  This can create verbose listings, but it can also 
+	 * be helpful determining the call stack.  Note: the logged 
+	 * information is not necessarily a complete call trace.  It 
+	 * only represents the results of a sampling.   For example it  
+	 * doesn't reveal when a logged method was exited and reentered 
+	 * unless logln is also called after the exit and before the 
+	 * reentry. The more logln calls that are made in this mode, the
+	 * clearer the picture of the code path. For example, in this 
+	 * mode, one can reduce ambiguity by calling logln() at the 
+	 * beginning of each loop iteration. 
+	 * 
+	 * @author jasonnet (2/17/2016)
+	 */
+	public static boolean boolInferAndLogStack = false;
+	static {
+		String inferstack = System.getenv().get("LOGLN_LOGSTACK");
+		if (inferstack==null) {
+			boolInferAndLogStack = false;
+		} else {
+			boolInferAndLogStack = inferstack.equals("1");
+		}
+	}
 	
+	private static ThreadLocal previousstack = new ThreadLocal() {
+			protected synchronized Object initialValue() {
+				return null;
+			};
+		};
 	/**
 	 * This is the PrintStream that will receive logging.  It's made
 	 * public here so that other code can also contribute to that 
 	 * stream.  This can be suitable for calls to 
 	 * throwable.printStackTrace(). 
 	 * 
-	 * @author nnd15 (2/11/2016)
+	 * @author jasonnet (2/11/2016)
 	 */
 	public final static PrintStream ps;
 	static {
 		String fn = System.getenv().get("LOGLN_FILE");
-		if (fn!=null) {
+		if ((fn!=null) && (fn.length()>0)) {
 			try {
 				ps = new PrintStream( new java.io.FileOutputStream(fn));
 			} catch (java.io.IOException exc) {
@@ -40,14 +81,6 @@ public class Logln {
 		}
 	}
 		
-	/**
-	 * hiding default constructor by declaring it private.
-	 * 
-	 * @author jasonnet (1/269/2015)
-	 */
-	private Logln() {
-	}
-
 	/**
 	 * A simple static logging method that prefixes the log line 
 	 * with the file name and linenumber of the caller.  It also 
@@ -65,66 +98,8 @@ public class Logln {
 	 */
 	public static void logln( String msg) {
 		StackTraceElement els[] = Thread.currentThread().getStackTrace();
-		_logln(msg, els, null);
-
-	}
-
-	/**
-	 * This is similar tot he logln(msg) method except that the 
-	 * caller can provide a shortened version of the filename to 
-	 * display.
-	 *  
-	 * One can facilitate calling this routine by including a 
-	 * <pre> 
-	 * import static org.jasonnet.logln.Logln.logln; 
-	 * </pre>
-	 * at the top of the source java file.
-	 * 
-	 * @author jasonnet (01/26/2015)
-	 * 
-	 * @param msg the diagnostic message to display
-	 * @param SHORTFN the filename to display when logging
-	 */
-	public static void logln( String msg, String SHORTFN) {
-		StackTraceElement els[] = Thread.currentThread().getStackTrace();
-		_logln(msg, els, SHORTFN );
-	}
-
-	private static void _logln( String msg, StackTraceElement els[], String fn) {
-		StringBuffer sb = new StringBuffer();
-		if (null==fn) {
-			// todo: provide code that looks in the class for SHORTFN static value.
-			String clsnm = els[2].getClassName();
-			try {
-				Class cls = Class.forName(clsnm);
-				if (cls!=null) {
-					Field fld = cls.getDeclaredField("SHORTFN");
-					if (fld!=null) {
-						Object oo = fld.get(null);
-						if (oo instanceof String) {
-							fn = (String)oo;
-						}
-					}
-				}
-			} catch (Exception exc) {}
-			if (fn==null) {
-				int idx = clsnm.lastIndexOf('.');
-				if (idx>0) {
-					fn = clsnm.substring(idx+1);
-				} else {
-					fn = clsnm; // we shouldn't reach this line
-				}
-			}
-		}
-		if (dateformat!=null) ps.print(dateformat.format(new Date()));
-		ps.printf("%20.20s:%4d: ", fn, els[2].getLineNumber() );
-		for (int i=0; i<els.length; i++) sb.append(' ');
-		sb.append(els[2].getMethodName());
-		sb.append(": ");
-		sb.append(msg);
-		ps.print(sb);
-		ps.println();
-		ps.flush();
+		//_logln(msg, els, 2);
+		_logRecentCallersAndStackEntry(msg, els);
 	}
 
 	protected static final String initial_datetemplate = "yyyy-MM-dd kk:mm:ss ";
@@ -147,4 +122,71 @@ public class Logln {
 			dateformat = new SimpleDateFormat(template);
 		}
 	}
+
+	private static void _logRecentCallersAndStackEntry(String msg, StackTraceElement els[] ) {
+		if (boolInferAndLogStack) {
+			StackTraceElement elsOld[] = (StackTraceElement[]) previousstack.get();
+			int idxOld = (elsOld==null) ? 0 : elsOld.length-1;
+			int idxNew = els.length-1;
+			boolean boolSoFarMatch = true;
+			while (idxNew>2) {
+				if ((elsOld==null) || (idxOld<2)) boolSoFarMatch = false;
+				if (boolSoFarMatch) {
+					if ((els[idxNew].getClassName().equals(elsOld[idxOld].getClassName())) 
+					    && (els[idxNew].getLineNumber()==elsOld[idxOld].getLineNumber())
+					    ) {
+						// still match
+					} else {
+						boolSoFarMatch = false;
+					}
+				}
+				if (!boolSoFarMatch) {
+					_loglnStackEntry(":stk:", els, idxNew);
+				}
+				idxNew--; idxOld--;
+			}
+		}
+		_loglnStackEntry(msg,els,2);
+		previousstack.set(els);
+	}
+
+	private static void _loglnStackEntry( String msg, StackTraceElement els[], int stkidx) {
+		StringBuffer sb = new StringBuffer();
+		String fn = null;
+		if (null==fn) {
+			// todo: provide code that looks in the class for SHORTFN static value.
+			String clsnm = els[stkidx].getClassName();
+			try {
+				Class cls = Class.forName(clsnm);
+				if (cls!=null) {
+					Field fld = cls.getDeclaredField("SHORTFN");
+					if (fld!=null) {
+						Object oo = fld.get(null);
+						if (oo instanceof String) {
+							fn = (String)oo;
+						}
+					}
+				}
+			} catch (Exception exc) {}
+			if (fn==null) {
+				int idx = clsnm.lastIndexOf('.');
+				if (idx>0) {
+					fn = clsnm.substring(idx+1);
+				} else {
+					fn = clsnm; // we shouldn't reach this line
+				}
+			}
+		}
+		if (dateformat!=null) ps.print(dateformat.format(new Date()));
+		ps.printf("%20.20s:%4d: ", fn, els[stkidx].getLineNumber() );
+		for (int i=0; i<(els.length-stkidx+2); i++) sb.append(' ');
+		sb.append(els[stkidx].getMethodName());
+		sb.append(": ");
+		sb.append(msg);
+		ps.print(sb);
+		ps.println();
+		ps.flush();
+	}
+
+
 }
