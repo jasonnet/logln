@@ -54,6 +54,7 @@ public class Logln {
 		}
 	}
 	
+	private static int previous_depth_adjustment = 0;
 	private static ThreadLocal previousstack = new ThreadLocal() {
 			protected synchronized Object initialValue() {
 				return null;
@@ -99,7 +100,34 @@ public class Logln {
 	public static void logln( String msg) {
 		StackTraceElement els[] = Thread.currentThread().getStackTrace();
 		//_logln(msg, els, 2);
-		_logRecentCallersAndStackEntry(msg, els);
+		_logRecentCallersAndStackEntry(msg, els, /*depth_adjustment:*/0 );
+	}
+
+	/**
+	 * A simple static logging method that prefixes the log line 
+	 * with the file name and linenumber of the caller.  It also 
+	 * indents the message by the depth of caller on the stack. 
+	 *  
+	 * One can facilitate calling this routine by including a 
+	 * <pre> 
+	 * import static org.jasonnet.logln.Logln.logln; 
+	 * </pre>
+	 * at the top of the source java file.
+	 * 
+	 * @author jasonnet (02/23/2015)
+	 * 
+	 * @param msg the diagnostic message to display
+	 * @param depth_adjustment set to 1 if it's actually the caller 
+	 *      		   that should be logged.  This can be
+	 *      		   helpful if used in a logging routine
+	 *      		   where it's not the logging routine
+	 *      		   that should be called, but instead
+	 *      		   the caller of the logging routine.
+	 */
+	public static void logln( String msg, int depth_adjustment) {
+		StackTraceElement els[] = Thread.currentThread().getStackTrace();
+		//_logln(msg, els, 2);
+		_logRecentCallersAndStackEntry(msg, els, depth_adjustment);
 	}
 
 	protected static final String initial_datetemplate = "yyyy-MM-dd kk:mm:ss ";
@@ -123,14 +151,14 @@ public class Logln {
 		}
 	}
 
-	private static void _logRecentCallersAndStackEntry(String msg, StackTraceElement els[] ) {
+	private static void _logRecentCallersAndStackEntry(String msg, StackTraceElement els[], int depth_adjustment ) {
 		if (boolInferAndLogStack) {
 			StackTraceElement elsOld[] = (StackTraceElement[]) previousstack.get();
 			int idxOld = (elsOld==null) ? 0 : elsOld.length-1;
 			int idxNew = els.length-1;
 			boolean boolSoFarMatch = true;
-			while (idxNew>2) {
-				if ((elsOld==null) || (idxOld<2)) boolSoFarMatch = false;
+			while (idxNew>(2+depth_adjustment)) {
+				if ((elsOld==null) || (idxOld<(2+previous_depth_adjustment))) boolSoFarMatch = false;
 				if (boolSoFarMatch) {
 					if ((els[idxNew].getClassName().equals(elsOld[idxOld].getClassName())) 
 					    && (els[idxNew].getLineNumber()==elsOld[idxOld].getLineNumber())
@@ -146,8 +174,9 @@ public class Logln {
 				idxNew--; idxOld--;
 			}
 		}
-		_loglnStackEntry(msg,els,2);
+		_loglnStackEntry(msg,els,2+depth_adjustment);
 		previousstack.set(els);
+		previous_depth_adjustment = depth_adjustment;
 	}
 
 	private static void _loglnStackEntry( String msg, StackTraceElement els[], int stkidx) {
