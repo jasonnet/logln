@@ -151,14 +151,30 @@ public class Logln {
 		}
 	}
 
+	static int calced_global_adjustment = -1;  // -1 means we still need to calculate the proper value
+
 	private static void _logRecentCallersAndStackEntry(String msg, StackTraceElement els[], int depth_adjustment ) {
+		if (calced_global_adjustment==-1) {
+			// it appears to be JVM dependent at what level of this stack trace the calling method of getStackTrace() will be.  We'll figure out what that value is here.
+			//ps.println("0 "+els[0].getMethodName()+"  "+els[0].getClassName());
+			//ps.println("1 "+els[1].getMethodName());
+			//ps.println("2 "+els[2].getMethodName());
+			//ps.println("3 "+els[3].getMethodName());
+			if (els[0].getClassName().equals("org.jasonnet.logln.Logln")) {
+				calced_global_adjustment = 1;
+			} else if (els[1].getClassName().equals("org.jasonnet.logln.Logln")) {
+				calced_global_adjustment = 2;
+			} else if (els[2].getClassName().equals("org.jasonnet.logln.Logln")) {
+				calced_global_adjustment = 3;
+			}
+		}
 		if (boolInferAndLogStack) {
 			StackTraceElement elsOld[] = (StackTraceElement[]) previousstack.get();
 			int idxOld = (elsOld==null) ? 0 : elsOld.length-1;
 			int idxNew = els.length-1;
 			boolean boolSoFarMatch = true;
-			while (idxNew>(2+depth_adjustment)) {
-				if ((elsOld==null) || (idxOld<(2+previous_depth_adjustment))) boolSoFarMatch = false;
+			while (idxNew>(calced_global_adjustment+depth_adjustment)) {
+				if ((elsOld==null) || (idxOld<(calced_global_adjustment+previous_depth_adjustment))) boolSoFarMatch = false;
 				if (boolSoFarMatch) {
 					if ((els[idxNew].getClassName().equals(elsOld[idxOld].getClassName())) 
 					    && (els[idxNew].getLineNumber()==elsOld[idxOld].getLineNumber())
@@ -174,7 +190,7 @@ public class Logln {
 				idxNew--; idxOld--;
 			}
 		}
-		_loglnStackEntry(msg,els,2+depth_adjustment);
+		_loglnStackEntry(msg,els,calced_global_adjustment+depth_adjustment);
 		previousstack.set(els);
 		previous_depth_adjustment = depth_adjustment;
 	}
