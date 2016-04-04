@@ -54,8 +54,17 @@ public class Logln {
 		}
 	}
 	
-	private static int previous_depth_adjustment = 0;
-	private static ThreadLocal previousstack = new ThreadLocal() {
+	static int threadcnt = 0;
+	static class ThreadLocalElement {
+		StackTraceElement stacktrace[];
+		int previous_depth_adjustment = 0;
+		int threadnum = threadcnt++;
+		//ThreadLocalElement(StackTraceElement stktrace[]) {
+		//	stacktrace = stktrace;
+		//}
+	}
+	//private static int previous_depth_adjustment = 0;
+	private static ThreadLocal thisthreadlocal = new ThreadLocal() {
 			protected synchronized Object initialValue() {
 				return null;
 			};
@@ -168,13 +177,18 @@ public class Logln {
 				calced_global_adjustment = 3;
 			}
 		}
+		ThreadLocalElement tlelement = (ThreadLocalElement)thisthreadlocal.get();
+		if (tlelement==null) {
+			tlelement = new ThreadLocalElement();
+			thisthreadlocal.set(tlelement);
+		}
 		if (boolInferAndLogStack) {
-			StackTraceElement elsOld[] = (StackTraceElement[]) previousstack.get();
-			int idxOld = (elsOld==null) ? 0 : elsOld.length-1;
+			StackTraceElement elsOld[] = tlelement.stacktrace;
+			int idxOld = (tlelement.stacktrace==null) ? 0 : tlelement.stacktrace.length-1;
 			int idxNew = els.length-1;
 			boolean boolSoFarMatch = true;
 			while (idxNew>(calced_global_adjustment+depth_adjustment)) {
-				if ((elsOld==null) || (idxOld<(calced_global_adjustment+previous_depth_adjustment))) boolSoFarMatch = false;
+				if ((elsOld==null) || (idxOld<(calced_global_adjustment+tlelement.previous_depth_adjustment))) boolSoFarMatch = false;
 				if (boolSoFarMatch) {
 					if ((els[idxNew].getClassName().equals(elsOld[idxOld].getClassName())) 
 					    && (els[idxNew].getLineNumber()==elsOld[idxOld].getLineNumber())
@@ -185,17 +199,17 @@ public class Logln {
 					}
 				}
 				if (!boolSoFarMatch) {
-					_loglnStackEntry(":stk:", els, idxNew);
+					_loglnStackEntry(":stk:", els, tlelement.threadnum, idxNew);
 				}
 				idxNew--; idxOld--;
 			}
 		}
-		_loglnStackEntry(msg,els,calced_global_adjustment+depth_adjustment);
-		previousstack.set(els);
-		previous_depth_adjustment = depth_adjustment;
+		_loglnStackEntry(msg, els, tlelement.threadnum, calced_global_adjustment+depth_adjustment);
+		tlelement.stacktrace = els;
+		tlelement.previous_depth_adjustment = depth_adjustment;
 	}
 
-	private static void _loglnStackEntry( String msg, StackTraceElement els[], int stkidx) {
+	synchronized private static void _loglnStackEntry( String msg, StackTraceElement els[], int threadid, int stkidx) {
 		StringBuffer sb = new StringBuffer();
 		String fn = null;
 		if (null==fn) {
@@ -222,6 +236,7 @@ public class Logln {
 				}
 			}
 		}
+		ps.printf("t%06x:", threadid);
 		if (dateformat!=null) ps.print(dateformat.format(new Date()));
 		ps.printf("%20.20s:%4d: ", fn, els[stkidx].getLineNumber() );
 		for (int i=0; i<(els.length-stkidx+2); i++) sb.append(' ');
