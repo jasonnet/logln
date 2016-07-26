@@ -38,7 +38,6 @@
     </developer>
   </developers>
 
-<!--- dependent pom.xml files will neeed this:
   <repositories>
       <repository>
           <id>jasonnetorg_releases</id>
@@ -53,7 +52,7 @@
           <snapshots><enabled>true</enabled></snapshots>
       </repository>
   </repositories>
--->
+
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
