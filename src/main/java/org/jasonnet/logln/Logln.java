@@ -53,12 +53,17 @@ public class Logln {
 			boolInferAndLogStack = inferstack.equals("1");
 		}
 	}
-	
+	static Object sem1 = new Object();
 	static int threadcnt = 0;
 	static class ThreadLocalElement {
 		StackTraceElement stacktrace[];
 		int previous_depth_adjustment = 0;
-		int threadnum = threadcnt++;
+		int threadnum;
+		ThreadLocalElement() {
+			synchronized(sem1) {
+				threadnum = threadcnt++;
+			}
+		}
 		//ThreadLocalElement(StackTraceElement stktrace[]) {
 		//	stacktrace = stktrace;
 		//}
@@ -236,16 +241,29 @@ public class Logln {
 				}
 			}
 		}
-		ps.printf("t%06x:", threadid);
-		if (dateformat!=null) ps.print(dateformat.format(new Date()));
-		ps.printf("%20.20s:%4d: ", fn, els[stkidx].getLineNumber() );
-		for (int i=0; i<(els.length-stkidx+2); i++) sb.append(' ');
-		sb.append(els[stkidx].getMethodName());
-		sb.append(": ");
-		sb.append(msg);
-		ps.print(sb);
-		ps.println();
-		ps.flush();
+		if (true) {
+			sb.append( String.format("t%06x:", threadid) );
+			if (dateformat!=null) sb.append( dateformat.format(new Date()) );
+			sb.append( String.format("%20.20s:%4d: ", fn, els[stkidx].getLineNumber() ) );
+			for (int i=0; i<(els.length-stkidx+2); i++) sb.append(' ');
+			sb.append(els[stkidx].getMethodName());
+			sb.append(": ");
+			sb.append(msg);
+			sb.append("\n");
+			ps.print(sb);
+			ps.flush();
+		} else {
+			ps.printf("t%06x:", threadid);
+			if (dateformat!=null) ps.print(dateformat.format(new Date()));
+			ps.printf("%20.20s:%4d: ", fn, els[stkidx].getLineNumber() );
+			for (int i=0; i<(els.length-stkidx+2); i++) sb.append(' ');
+			sb.append(els[stkidx].getMethodName());
+			sb.append(": ");
+			sb.append(msg);
+			ps.print(sb);
+			ps.println();
+			ps.flush();
+		}
 	}
 
 
