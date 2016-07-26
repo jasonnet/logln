@@ -3,7 +3,7 @@
 
   <groupId>org.jasonnet</groupId>
   <artifactId>jasonnet-logln</artifactId>
-  <version>0.5.0</version>
+  <version>0.5.1-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>logln</name>
@@ -26,7 +26,7 @@
     <url>https://github.com/jasonnet/logln</url>
     <connection>scm:git:https://github.com/jasonnet/logln.git</connection>
     <developerConnection>scm:git:git@github.com:jasonnet/logln.git</developerConnection>
-    <tag>jasonnet-logln-0.5.0</tag>
+    <tag>HEAD</tag>
   </scm>
 
 
