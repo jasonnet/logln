@@ -107,14 +107,27 @@ public class Logln {
 	 * </pre>
 	 * at the top of the source java file.
 	 * 
+	 * Because this message returns its msg parameter, one can
+	 * conveniently use it to log failed assertions.  For
+	 * example:
+	 * <pre> 
+	 * assert 2+2==5 : logln("bad basic math");
+	 * </pre>
+	 * Because of how Java's assert operation works, the logln()
+	 * here is called only if the assertion fails. When that occurs
+	 * the msg is also included in the message of the AssertionError object 
+	 * the assert throws.
+	 * 
+	 * 
 	 * @author jasonnet (01/26/2015)
 	 * 
 	 * @param msg the diagnostic message to display
 	 */
-	public static void logln( String msg) {
+	public static String logln( String msg) {
 		StackTraceElement els[] = Thread.currentThread().getStackTrace();
 		//_logln(msg, els, 2);
 		_logRecentCallersAndStackEntry(msg, els, /*depth_adjustment:*/0 );
+		return msg;  // this make it easier to list it in an assert
 	}
 
 	/**
@@ -138,13 +151,20 @@ public class Logln {
 	 *      		   that should be called, but instead
 	 *      		   the caller of the logging routine.
 	 */
-	public static void logln( String msg, int depth_adjustment) {
+	public static String logln( String msg, int depth_adjustment) {
 		StackTraceElement els[] = Thread.currentThread().getStackTrace();
 		//_logln(msg, els, 2);
 		_logRecentCallersAndStackEntry(msg, els, depth_adjustment);
+		return msg;  // this make it easier to list it in an assert
 	}
 
-	protected static final String initial_datetemplate = "yyyy-MM-dd kk:mm:ss ";
+	protected static String initial_datetemplate = "yyyy-MM-dd kk:mm:ss ";
+	static {
+		String show_milliseconds = System.getenv().get("LOGLN_SHOW_MILLISECONDS");
+		if ("1".equals(show_milliseconds)) {
+			initial_datetemplate = "yyyy-MM-dd kk:mm:ss.SSS ";
+		}
+	}
 	protected static SimpleDateFormat dateformat = new SimpleDateFormat(initial_datetemplate);
 
 	/**
@@ -265,6 +285,5 @@ public class Logln {
 			ps.flush();
 		}
 	}
-
 
 }
